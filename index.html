@@ -130,6 +130,13 @@
             border-color: #ef4444;
         }
 
+        .vaga.destaque {
+            border-color: #fbbf24 !important;
+            box-shadow: 0 0 0 4px rgba(251, 191, 36, 0.4);
+            transform: scale(1.06);
+            z-index: 10;
+        }
+
         .vaga:hover {
             transform: translateY(-4px);
             box-shadow: 0 10px 20px rgba(0,0,0,0.3);
@@ -226,6 +233,48 @@
         .btn-secondary {
             background: #334155;
             color: #e2e8f0;
+        }
+
+        .btn-busca {
+            background: linear-gradient(90deg, #f59e0b, #d97706);
+            color: white;
+        }
+
+        /* ===== BUSCA POR PLACA ===== */
+        .busca-box {
+            background: #0f172a;
+            border: 1px solid #475569;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .busca-box h3 {
+            font-size: 0.95rem;
+            margin-bottom: 12px;
+            color: #fbbf24;
+        }
+
+        .busca-resultado {
+            margin-top: 12px;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        .busca-resultado.encontrado {
+            background: #14532d;
+            border: 1px solid #22c55e;
+            color: #4ade80;
+            display: block;
+        }
+
+        .busca-resultado.nao-encontrado {
+            background: #7f1d1d;
+            border: 1px solid #ef4444;
+            color: #f87171;
+            display: block;
         }
 
         /* ===== MOVIMENTAÇÃO ===== */
@@ -354,8 +403,18 @@
                 <div class="grid-vagas" id="gridVagas"></div>
             </div>
 
-            <!-- FORMULÁRIO -->
+            <!-- FORMULÁRIO + BUSCA -->
             <div class="form-area">
+                <!-- BUSCA RÁPIDA POR PLACA -->
+                <div class="busca-box">
+                    <h3>🔍 Busca Rápida por Placa</h3>
+                    <div class="form-group" style="margin-bottom: 10px;">
+                        <input type="text" id="buscaPlaca" placeholder="Digite a placa..." maxlength="8" style="text-transform: uppercase;">
+                    </div>
+                    <button class="btn btn-busca" onclick="buscarPlaca()">Buscar Placa</button>
+                    <div id="resultadoBusca" class="busca-resultado"></div>
+                </div>
+
                 <h2 style="margin-bottom: 18px;">🚗 Estacionar Veículo</h2>
 
                 <div class="form-group">
@@ -461,6 +520,11 @@
             }
 
             renderizar();
+
+            // Busca ao pressionar Enter
+            document.getElementById('buscaPlaca').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') buscarPlaca();
+            });
         }
 
         // ===== RENDERIZAÇÃO =====
@@ -478,6 +542,7 @@
             vagas.forEach((vaga, index) => {
                 const div = document.createElement('div');
                 div.className = `vaga ${vaga.ocupada ? 'ocupada' : 'livre'}`;
+                div.id = `vaga-${index}`;
                 
                 if (vaga.ocupada) {
                     div.innerHTML = `
@@ -551,6 +616,58 @@
                 `;
                 tbody.appendChild(tr);
             });
+        }
+
+        // ===== BUSCA POR PLACA =====
+        function buscarPlaca() {
+            const termo = document.getElementById('buscaPlaca').value.trim().toUpperCase();
+            const resultado = document.getElementById('resultadoBusca');
+
+            // Remove destaque anterior
+            document.querySelectorAll('.vaga.destaque').forEach(el => el.classList.remove('destaque'));
+
+            if (!termo) {
+                resultado.className = 'busca-resultado nao-encontrado';
+                resultado.innerHTML = 'Digite uma placa para buscar.';
+                return;
+            }
+
+            // Procura a vaga
+            const index = vagas.findIndex(v => v.ocupada && v.placa === termo);
+
+            if (index === -1) {
+                resultado.className = 'busca-resultado nao-encontrado';
+                resultado.innerHTML = `❌ Placa <strong>${termo}</strong> não encontrada no estacionamento.`;
+                return;
+            }
+
+            const vaga = vagas[index];
+            const tempo = calcularTempo(vaga.horarioEntrada);
+
+            resultado.className = 'busca-resultado encontrado';
+            resultado.innerHTML = `
+                ✅ <strong>Encontrado!</strong><br>
+                Vaga: <strong>${vaga.numero}</strong><br>
+                Tipo: ${vaga.tipo}<br>
+                Tempo: ${tempo}
+            `;
+
+            // Destaca a vaga no mapa
+            const elemento = document.getElementById(`vaga-${index}`);
+            if (elemento) {
+                elemento.classList.add('destaque');
+                elemento.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
+        function calcularTempo(entrada) {
+            if (!entrada) return '-';
+            const agora = new Date();
+            const diff = Math.floor((agora - entrada) / 1000 / 60); // minutos
+            if (diff < 60) return `${diff} min`;
+            const horas = Math.floor(diff / 60);
+            const mins = diff % 60;
+            return `${horas}h ${mins}min`;
         }
 
         // ===== AÇÕES =====
