@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estacionamento Inteligente</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            min-height: 100vh;
+            color: #fff;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        header h1 {
+            font-size: 2.4rem;
+            margin-bottom: 8px;
+            background: linear-gradient(90deg, #00d2ff, #3a7bd5);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .info {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .info-box {
+            background: rgba(255, 255, 255, 0.08);
+            padding: 12px 25px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.1rem;
+        }
+
+        .dot {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+        }
+
+        .livre { background: #00c853; }
+        .ocupada { background: #ff1744; }
+        .selecionada { background: #ffd600; }
+
+        .estacionamento {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+            gap: 15px;
+            background: #0f3460;
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+        }
+
+        .vaga {
+            height: 110px;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            position: relative;
+            font-weight: 600;
+            border: 3px solid transparent;
+        }
+
+        .vaga.livre {
+            background: #1b5e20;
+            border-color: #00c853;
+        }
+
+        .vaga.ocupada {
+            background: #b71c1c;
+            border-color: #ff1744;
+        }
+
+        .vaga:hover {
+            transform: scale(1.08);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+
+        .vaga .numero {
+            font-size: 1.4rem;
+            margin-bottom: 6px;
+        }
+
+        .vaga .status {
+            font-size: 0.85rem;
+            opacity: 0.9;
+        }
+
+        .carro {
+            font-size: 2rem;
+            margin-bottom: 4px;
+        }
+
+        .controles {
+            margin-top: 30px;
+            text-align: center;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background: linear-gradient(90deg, #3a7bd5, #00d2ff);
+            border: none;
+            color: white;
+            padding: 12px 28px;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 210, 255, 0.4);
+        }
+
+        button.vermelho {
+            background: linear-gradient(90deg, #c62828, #ff1744);
+        }
+
+        .rodape {
+            text-align: center;
+            margin-top: 40px;
+            opacity: 0.6;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🅿️ Estacionamento Inteligente</h1>
+            <p>Clique nas vagas para ocupar ou liberar</p>
+        </header>
+
+        <div class="info">
+            <div class="info-box">
+                <div class="dot livre"></div>
+                <span>Livres: <strong id="livres">0</strong></span>
+            </div>
+            <div class="info-box">
+                <div class="dot ocupada"></div>
+                <span>Ocupadas: <strong id="ocupadas">0</strong></span>
+            </div>
+            <div class="info-box">
+                <span>Total: <strong id="total">0</strong></span>
+            </div>
+        </div>
+
+        <div class="estacionamento" id="estacionamento">
+            <!-- Vagas geradas pelo JavaScript -->
+        </div>
+
+        <div class="controles">
+            <button onclick="ocuparAleatorias()">Ocupar Aleatórias</button>
+            <button onclick="liberarTodas()">Liberar Todas</button>
+            <button class="vermelho" onclick="ocuparTodas()">Ocupar Todas</button>
+        </div>
+
+        <div class="rodape">
+            Feito com ❤️ em HTML + CSS + JavaScript
+        </div>
+    </div>
+
+    <script>
+        const totalVagas = 24;
+        const estacionamento = document.getElementById('estacionamento');
+        let vagas = [];
+
+        // Cria as vagas
+        function criarVagas() {
+            estacionamento.innerHTML = '';
+            vagas = [];
+
+            for (let i = 1; i <= totalVagas; i++) {
+                const ocupada = Math.random() < 0.3; // 30% já ocupadas no início
+                vagas.push(ocupada);
+
+                const vaga = document.createElement('div');
+                vaga.className = `vaga ${ocupada ? 'ocupada' : 'livre'}`;
+                vaga.innerHTML = `
+                    <div class="carro">${ocupada ? '🚗' : '🅿️'}</div>
+                    <div class="numero">Vaga ${i}</div>
+                    <div class="status">${ocupada ? 'Ocupada' : 'Livre'}</div>
+                `;
+                vaga.onclick = () => toggleVaga(i - 1, vaga);
+                estacionamento.appendChild(vaga);
+            }
+            atualizarContadores();
+        }
+
+        // Alterna o status da vaga
+        function toggleVaga(index, elemento) {
+            vagas[index] = !vagas[index];
+            const ocupada = vagas[index];
+
+            elemento.className = `vaga ${ocupada ? 'ocupada' : 'livre'}`;
+            elemento.innerHTML = `
+                <div class="carro">${ocupada ? '🚗' : '🅿️'}</div>
+                <div class="numero">Vaga ${index + 1}</div>
+                <div class="status">${ocupada ? 'Ocupada' : 'Livre'}</div>
+            `;
+            atualizarContadores();
+        }
+
+        // Atualiza os contadores
+        function atualizarContadores() {
+            const ocupadas = vagas.filter(v => v).length;
+            const livres = totalVagas - ocupadas;
+
+            document.getElementById('ocupadas').textContent = ocupadas;
+            document.getElementById('livres').textContent = livres;
+            document.getElementById('total').textContent = totalVagas;
+        }
+
+        // Ocupa algumas vagas aleatórias
+        function ocuparAleatorias() {
+            vagas = vagas.map(() => Math.random() < 0.5);
+            criarVagasVisual();
+        }
+
+        // Libera todas
+        function liberarTodas() {
+            vagas = vagas.map(() => false);
+            criarVagasVisual();
+        }
+
+        // Ocupa todas
+        function ocuparTodas() {
+            vagas = vagas.map(() => true);
+            criarVagasVisual();
+        }
+
+        // Atualiza só a visualização
+        function criarVagasVisual() {
+            const elementos = document.querySelectorAll('.vaga');
+            elementos.forEach((el, i) => {
+                const ocupada = vagas[i];
+                el.className = `vaga ${ocupada ? 'ocupada' : 'livre'}`;
+                el.innerHTML = `
+                    <div class="carro">${ocupada ? '🚗' : '🅿️'}</div>
+                    <div class="numero">Vaga ${i + 1}</div>
+                    <div class="status">${ocupada ? 'Ocupada' : 'Livre'}</div>
+                `;
+            });
+            atualizarContadores();
+        }
+
+        // Inicia o estacionamento
+        criarVagas();
+    </script>
+</body>
+</html>
